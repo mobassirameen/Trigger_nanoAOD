@@ -1,4 +1,4 @@
-python```
+```bash
 echo "# Trigger_nanoAOD" >> README.md
 
 git init
