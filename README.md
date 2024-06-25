@@ -1,3 +1,4 @@
+bash```
 echo "# Trigger_nanoAOD" >> README.md
 
 git init
@@ -12,3 +13,4 @@ git remote add origin git@github.com:mobassirameen/Trigger_nanoAOD.git
 
 git push -u origin main
 
+```
