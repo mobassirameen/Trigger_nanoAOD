@@ -1,5 +1,7 @@
 **NanoAOD Tools are extearcted from [here](https://github.com/cms-sw/cmssw/tree/CMSSW_13_0_X/PhysicsTools/NanoAODTools)**
 
+**[Trigger Short Exercise 2023](https://github.com/marinakolosova/ShortExerciseTrigger2023/tree/main)**
+
 ```bash
 echo "# Trigger_nanoAOD" >> README.md
 
