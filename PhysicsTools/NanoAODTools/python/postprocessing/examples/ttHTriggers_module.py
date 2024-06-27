@@ -1,8 +1,9 @@
-import os
+import os, sys
 import ROOT
 
 ROOT.PyConfig.IgnoreCommandLineOptions = True
 from importlib import import_module
+import array
 
 from PhysicsTools.NanoAODTools.postprocessing.framework.datamodel import Collection, Object
 from PhysicsTools.NanoAODTools.postprocessing.framework.eventloop import Module
@@ -20,38 +21,31 @@ class TrigAnalysis(Module):
         
     def beginJob(self,histFile=None,histDirName=None):
         Module.beginJob(self,histFile,histDirName)
+        
+        self.bins = {}
+        self.bins["lep1_pt"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+        
         self.h_passreftrig  = ROOT.TH1F("h_passreftrig" , "; passed ref trigger", 2, 0. , 2.)
-        self.h_Lleptons_cut      = ROOT.TH1F("h_Lleptons_cut" , "; p_{T} [GeV]", 40, 30., 120.)
-        self.h_Sleptons_cut      = ROOT.TH1F("h_Sleptons_cut" , "; p_{T} [GeV]", 40, 30., 120.)
-        self.h_Lleptons_all      = ROOT.TH1F("h_Lleptons_all" , "; p_{T} [GeV]", 40, 30., 120.)
-        self.h_Sleptons_all      = ROOT.TH1F("h_Sleptons_all" , "; p_{T} [GeV]", 40, 30., 120.)
-        self.h_Lleptons_passtrig = ROOT.TH1F("h_Lleptons_passtrig" , "; p_{T} [GeV]", 40, 30., 120.)
-        self.h_Sleptons_passtrig = ROOT.TH1F("h_Sleptons_passtrig" , "; p_{T} [GeV]", 40, 30., 120.)
-        self.hList_ll = []
-        self.hList_sl = []
+        self.h_lep1_pt_all = ROOT.TH1F("h_lep1_pt_all", "; Cone p_{T}^{l1} [GeV]", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
+        self.h_lep1_pt_passed = ROOT.TH1F("h_lep1_pt_passed", "; Cone p_{T}^{l1} [GeV];Efficiency", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
+        self.h_lep1_pt_passedreftrig = ROOT.TH1F("h_lep1_pt_passedreftrig", "; Cone p_{T}^{l1} [GeV];Efficiency", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
+        self.h_lep1_pt_passedsignalANDreference = ROOT.TH1F("h_lep1_pt_passedsignalANDreference", "; Cone p_{T}^{l1} [GeV];Efficiency", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
+        
+        self.hList = {}
         for path in self.signal_paths:
-            histo_ll = ROOT.TH1F("h_Lleptons_passtrig_HLT_%s" % (path), "; p_{T} [GeV]", 40, 30., 120.)
-            histo_sl = ROOT.TH1F("h_Sleptons_passtrig_HLT_%s" % (path), "; p_{T} [GeV]", 40, 30., 120.)
-            self.hList_ll.append(histo_ll)
-            self.hList_sl.append(histo_sl)
+            self.hList[f'h_lep1_pt_passtrig_HLT_{path}'] = ROOT.TH1F(f'h_lep1_pt_passtrig_HLT_{path}', ";p_{T}^{l1} [GeV]", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
         self.addObject(self.h_passreftrig )
-        self.addObject(self.h_Lleptons_cut )
-        self.addObject(self.h_Sleptons_cut )
-        self.addObject(self.h_Lleptons_all )
-        self.addObject(self.h_Sleptons_all )
-        self.addObject(self.h_Lleptons_passtrig )
-        self.addObject(self.h_Sleptons_passtrig )
-        for hll in self.hList_ll:
-            self.addObject(hll)
-        for hsl in self.hList_sl:
-            self.addObject(hsl)
+        self.addObject(self.h_lep1_pt_all)
+        self.addObject(self.h_lep1_pt_passed)
+        self.addObject(self.h_lep1_pt_passedreftrig)
+        self.addObject(self.h_lep1_pt_passedsignalANDreference)
+        for h in self.hList:
+            self.addObject(self.hList[h])
 
     def analyze(self, event):
 
-        #met = Object(event, "MET") 
-        
+        met = Object(event, "MET")
         hlt = Object(event, "HLT")
-        flg = Object(event, "Flag")
         
         # Check if event passes the reference trigger(s)
         refAccept=False
@@ -59,26 +53,30 @@ class TrigAnalysis(Module):
             bit = getattr(hlt, path)
             if bit:
                 refAccept = True
-
+	
         # Save the bit of reference trigger and skim event
         self.h_passreftrig.Fill(refAccept)
         if not refAccept:
            return False
-           
-        #****************************************************
-        # Add any offline selection here:
-        #****************************************************
         
-        # check if event passes the filters
-        falgfilterPassed=False
-        for flag in ["goodVertices", "globalSuperTightHalo2016Filter"]:
-            flagfilterbit = getattr(flg, flag)
-            if flagfilterbit:
-                flagfilterPassed=True
-                #print("flags are applied*******")
-            if not flagfilterPassed:
-                return False
-        ## MET    
+        # Require events to satisfy noise filters:
+        met_filters = bool(
+            event.Flag_goodVertices and
+            event.Flag_globalSuperTightHalo2016Filter and
+            event.Flag_HBHENoiseFilter and
+            event.Flag_HBHENoiseIsoFilter and
+            event.Flag_EcalDeadCellTriggerPrimitiveFilter and
+            event.Flag_BadPFMuonFilter and
+            event.Flag_BadPFMuonDzFilter and
+            event.Flag_eeBadScFilter and
+            event.Flag_ecalBadCalibFilter
+        )
+        if not met_filters:
+            return False
+        
+        # Add any offline selection here:
+        
+        # MET    
         if event.MET_pt < 120:
             return False
           
@@ -92,31 +90,26 @@ class TrigAnalysis(Module):
         if len(leps) == 2:
             for i,l1 in enumerate(leps):
                 l2 = leps[1-i]
-                self.h_Lleptons_all.Fill(l1.pt) ## This will give all leading leptons before cuts
-                self.h_Sleptons_all.Fill(l2.pt) ## This will give all sub-leading leptons before cuts
+                if conept_TTH(l1) < 25 and conept_TTH(l2) < 15: continue 
                 if l1.cutBased < 4 and l2.cutBased < 4: continue # (cutBased ID: 0:fail, 1:veto, 2:loose, 3:medium, 4:tight)
-                if conept_TTH(l1) < 25 and conept_TTH(l2) < 15: continue
-                #print(l1.pt)
-                #print(l2.pt)
-                #print(100*"#")    
-                ret[i] = 1
-                self.h_Lleptons_cut.Fill(l1.pt) ## This will give the all leading leptons after cutse
-                self.h_Sleptons_cut.Fill(l2.pt) ## This will give the all sub-leading leptons after cutse      
+                ret[i] = 1      
+        
+        self.h_lep1_pt_all.Fill(conept_TTH(l1))
         
         # Check if event passes the signal trigger(s)
         signalOR = False
         for path in self.signal_paths:
-            #pass
-            bit = getattr(hlt, path)
-            if bit:
+            if getattr(hlt, path) == 1:
                 signalOR = True
-                histll = next((h for h in self.hList_ll if path in h.GetName()), None)
-                histsl = next((h for h in self.hList_sl if path in h.GetName()), None)
-                histll.Fill(l1.pt)
-                histsl.Fill(l2.pt)
+                self.hList[f'h_lep1_pt_passtrig_HLT_{path}'].Fill(conept_TTH(l1))
 
-        if signalOR and refAccept: ## check if OR of signal_pat and ref_path are activated
-            self.h_Lleptons_passtrig.Fill(l1.pt)
-            self.h_Sleptons_passtrig.Fill(l2.pt)
-
+        if signalOR:
+            self.h_lep1_pt_passed.Fill(conept_TTH(l1))
+            
+        if refAccept:
+            self.h_lep1_pt_passedreftrig.Fill(conept_TTH(l1))
+            
+        if signalOR and hlt.PFMET120_PFMHT120_IDTight == 1: ## check if OR of signal_path(Trigger_2lss) and ref_path (Trigger_MET) are activated
+            self.h_lep1_pt_passedsignalANDreference.Fill(conept_TTH(l1))    
+            
         return True
