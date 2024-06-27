@@ -45,6 +45,7 @@ def createLegend():
     legend.SetFillColor(0)
     legend.SetFillStyle(0);
     legend.SetBorderSize(0);
+    legend.SetTextSize(0.03)  # Set text size
     return legend
 
 def SetStyle(h, color, marker_style):
@@ -58,7 +59,7 @@ ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetTextFont(42)
 
 def SetStyle(h, COLOR):
-    h.SetMarkerStyle(21)
+    h.SetMarkerStyle(20)
     h.SetMarkerColor(COLOR)
     h.SetLineColor(COLOR)
     return h
@@ -81,7 +82,7 @@ def main(args):
     statOption = ROOT.TEfficiency.kFCP
 
     #variables  = ["met_pt", "pv"]
-    variables  = ["lep1_pt"]
+    variables  = ["lep1_pt", "lep1_eta"]
     #triggers   = ["passed", "passtrig_HLT_Ele32_WPTight_Gsf", "passtrig_HLT_IsoMu24", "passtrig_HLT_Ele23_Ele12_CaloIdL_TrackIdL_IsoVL"]
     #triggers   = ["passed", "passtrig_HLT_Ele32_WPTight_Gsf"]
     triggers   = ["passedsignalANDreference"]
@@ -128,17 +129,18 @@ def main(args):
             savename = f'plots/TrgEffs_{var}{fs}'
             c.SaveAs(savename)
             
-'''
+
     # Plot 2D:
     c2D = getCanvas()
 
-    den = fdir.Get('h_met_pt_vs_pv_all')
-    num = fdir.Get('h_met_pt_vs_pv_passed')
+    den = fdir.Get('h_lep1_eta_vs_pt_passedreftrig')
+    num = fdir.Get('h_lep1_eta_vs_pt_passedsignalANDreference')
     
     eff2D = ROOT.TEfficiency(num, den)
     eff2D.Draw("COLZ")
     c2D.Modified()
     c2D.Update()
+    
     tex_cms = AddCMSText()
     tex_cms.Draw("same")
     private = AddPrivateWorkText()
@@ -148,15 +150,44 @@ def main(args):
     header.DrawLatexNDC(0.57, 0.905, "2022EE, #sqrt{s} = 13.6 TeV")
     c2D.Update()
     c2D.Modified()
+    
+    # Print the efficiency values on the plot
+    latex = ROOT.TLatex()
+    latex.SetTextSize(0.02)
+    latex.SetTextAlign(22)  # Center alignment
+    for x_bin in range(1, eff2D.GetTotalHistogram().GetNbinsX() + 1):
+        for y_bin in range(1, eff2D.GetTotalHistogram().GetNbinsY() + 1):
+            if eff2D.GetTotalHistogram().GetBinContent(x_bin, y_bin) != 0:  # Check to avoid division by zero
+                eta = eff2D.GetTotalHistogram().GetXaxis().GetBinCenter(x_bin)
+                pt = eff2D.GetTotalHistogram().GetYaxis().GetBinCenter(y_bin)
+                efficiency = eff2D.GetEfficiency(eff2D.GetGlobalBin(x_bin, y_bin))
+                efficiency_text = f"{efficiency:.2f}"
+                latex.DrawLatex(eta, pt, efficiency_text)
+
+    c2D.Update()
+    c2D.Modified()
+
+    # Save the plot in specified formats
     for fs in args.formats:
-        c2D.SaveAs("plots/Eff2D_METtrigger_METvsPV%s" % (fs))
-'''
+        c2D.SaveAs("plots/Eff2D_trigger_EtavsPt%s" % (fs))     
+    
+    # Print the numerical efficiency values
+    #print("Efficiency values (eta, pt, efficiency):")
+    #for x_bin in range(1, eff2D.GetTotalHistogram().GetNbinsX() + 1):
+        #for y_bin in range(1, eff2D.GetTotalHistogram().GetNbinsY() + 1):
+            #if eff2D.GetTotalHistogram().GetBinContent(x_bin, y_bin) != 0:  # Check to avoid division by zero
+                #eta = eff2D.GetTotalHistogram().GetXaxis().GetBinCenter(x_bin)
+                #pt = eff2D.GetTotalHistogram().GetYaxis().GetBinCenter(y_bin)
+                #efficiency = eff2D.GetEfficiency(eff2D.GetGlobalBin(x_bin, y_bin))
+                #print(f"eta: {eta}, pt: {pt}, efficiency: {efficiency}")
 
 if __name__ == "__main__":
 
     VERBOSE       = True
     YEAR          = "2022EE"
-    TRGROOTFILE   = "histos_2lssTrigger_DATA2022EE.root"
+    #TRGROOTFILE   = "histos_2lssTrigger_DATA2022EE.root"
+    #TRGROOTFILE   = "histos_2lssTrigger_pt_eta_DATA2022EE.root"
+    TRGROOTFILE   = "histos_2lssTrigger_pt_eta_1D_2D_DATA2022EE.root"
     FORMATS       = ['.png', '.pdf']
 
     parser = ArgumentParser(description="Derive the trigger scale factors")
