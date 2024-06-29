@@ -9,8 +9,7 @@ DESCRIPTION:
 #================
 from argparse import ArgumentParser
 import ROOT
-import math 
-import time
+import os
 
 def getCanvas():
     d = ROOT.TCanvas("", "", 800, 700)
@@ -73,7 +72,7 @@ colors = {0: ROOT.kBlack,
           6: ROOT.kTeal+3,
           }
 
-def drawEfficiency(fdir, lep, args):
+def drawEfficiency(fdir, lep, era, datatype, args):
     # Plot 2D:
     c2D = getCanvas()
 
@@ -91,7 +90,7 @@ def drawEfficiency(fdir, lep, args):
     private.Draw("same")
     header = ROOT.TLatex()
     header.SetTextSize(0.04)
-    header.DrawLatexNDC(0.57, 0.905, "2022EE, #sqrt{s} = 13.6 TeV")
+    header.DrawLatexNDC(0.57, 0.905, f"{datatype}, {era}, #sqrt{{s}} = 13.6 TeV")
     c2D.Update()
     c2D.Modified()
     
@@ -110,33 +109,40 @@ def drawEfficiency(fdir, lep, args):
 
     c2D.Update()
     c2D.Modified()
-
+    
     # Save the plot in specified formats
+    outdir = f"/eos/user/m/moameen/www/TriggerStudyPlots/{era}"
+    os.makedirs(outdir, exist_ok=True)
     for fs in args.formats:
-        c2D.SaveAs(f"/eos/user/m/moameen/www/TriggerStudyPlots/Eff2D_trigger_{lep}_eta_vs_pt{fs}")
-        
+        c2D.SaveAs(os.path.join(outdir, f"Eff2D_trigger_{lep}_eta_vs_pt_{datatype}_{era}{fs}"))
+    
 def main(args):
 
-    f = ROOT.TFile(args.rfile, "READ")
-    fdir = f.GetDirectory("twoleptonTriggers")
-    statOption = ROOT.TEfficiency.kFCP
+    files = {
+        "DATA2022": ("histos_2lssTrigger_DATA2022.root", "Data", "2022"),
+        "DATA2022EE": ("histos_2lssTrigger_DATA2022EE.root", "Data", "2022EE"),
+        "MC2022": ("histos_2lssTrigger_MC2022.root", "MC", "2022"),
+        "MC2022EE": ("histos_2lssTrigger_MC2022EE.root", "MC", "2022EE")
+    }
 
-    for leps in ['lep1', 'lep2']:
-        drawEfficiency(fdir, leps, args)
+    for key, (filename, datatype, era) in files.items():
+        f = ROOT.TFile(os.path.join(args.indir, filename), "READ")
+        fdir = f.GetDirectory("twoleptonTriggers")
+        statOption = ROOT.TEfficiency.kFCP
+
+        for leps in ['lep1', 'lep2']:
+            drawEfficiency(fdir, leps, era, datatype, args)
 
 if __name__ == "__main__":
 
     VERBOSE       = True
-    YEAR          = "2022EE"
-    TRGROOTFILE   = "histos_2lssTrigger_DATA2022EE.root"
-    #FORMATS       = ['.png', '.pdf']
     FORMATS       = ['.png']
 
     parser = ArgumentParser(description="Derive the trigger scale factors")
     parser.add_argument("-v", "--verbose", dest="verbose", default=VERBOSE, action="store_true", help="Verbose mode for debugging purposes [default: %s]" % (VERBOSE))
-    parser.add_argument("--rfile", dest="rfile", type=str, action="store", default=TRGROOTFILE, help="ROOT file containing the denominators and numerators [default: %s]" % (TRGROOTFILE))
-    parser.add_argument("--year", dest="year", action="store", default=YEAR, help="Process year")
+    parser.add_argument("--indir", dest="indir", type=str, action="store", default="/eos/user/m/moameen/Trigger_nanoAOD", help="Directory containing ROOT files")
     parser.add_argument("--formats", dest="formats", default=FORMATS, action="store", help="Formats to save histograms")
 
     args = parser.parse_args()
     main(args)
+
