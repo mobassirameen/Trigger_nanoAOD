@@ -20,31 +20,31 @@ def getCanvas():
     return d
 
 def AddPrivateWorkText(setx=0.21, sety=0.905):
-    tex = ROOT.TLatex(0.,0., 'Private Work');
-    tex.SetNDC();
-    tex.SetX(setx);
-    tex.SetY(sety);
-    tex.SetTextFont(53);
-    tex.SetTextSize(28);
+    tex = ROOT.TLatex(0.,0., 'Private Work')
+    tex.SetNDC()
+    tex.SetX(setx)
+    tex.SetY(sety)
+    tex.SetTextFont(53)
+    tex.SetTextSize(28)
     tex.SetLineWidth(2)
     return tex
 
 def AddCMSText(setx=0.205, sety=0.905):
-    texcms = ROOT.TLatex(0.,0., 'CMS');
-    texcms.SetNDC();
-    texcms.SetTextAlign(31);
-    texcms.SetX(setx);
-    texcms.SetY(sety);
-    texcms.SetTextFont(63);
-    texcms.SetLineWidth(2);
-    texcms.SetTextSize(30);
+    texcms = ROOT.TLatex(0.,0., 'CMS')
+    texcms.SetNDC()
+    texcms.SetTextAlign(31)
+    texcms.SetX(setx)
+    texcms.SetY(sety)
+    texcms.SetTextFont(63)
+    texcms.SetLineWidth(2)
+    texcms.SetTextSize(30)
     return texcms
 
 def createLegend():
     legend = ROOT.TLegend(0.30, 0.30, 0.82, 0.50)
     legend.SetFillColor(0)
-    legend.SetFillStyle(0);
-    legend.SetBorderSize(0);
+    legend.SetFillStyle(0)
+    legend.SetBorderSize(0)
     legend.SetTextSize(0.03)  # Set text size
     return legend
 
@@ -72,19 +72,13 @@ colors = {0: ROOT.kBlack,
           5: ROOT.kMagenta+2,
           6: ROOT.kTeal+3,
           }
-          
 
-def main(args):
-
-    f = ROOT.TFile(args.rfile, "READ")
-    fdir = f.GetDirectory("twoleptonTriggers")
-    statOption = ROOT.TEfficiency.kFCP
-
+def drawEfficiency(fdir, lep, args):
     # Plot 2D:
     c2D = getCanvas()
 
-    den = fdir.Get('h_lep1_eta_vs_pt_passedreftrig')
-    num = fdir.Get('h_lep1_eta_vs_pt_passedsignalANDreference')
+    den = fdir.Get(f'h_{lep}_eta_vs_pt_passedreftrig')
+    num = fdir.Get(f'h_{lep}_eta_vs_pt_passedsignalANDreference')
     
     eff2D = ROOT.TEfficiency(num, den)
     eff2D.Draw("COLZ")
@@ -119,21 +113,16 @@ def main(args):
 
     # Save the plot in specified formats
     for fs in args.formats:
-        c2D.SaveAs("/eos/user/m/moameen/www/TriggerStudyPlots/Eff2D_trigger_lep1_eta_vs_pt%s" % (fs))
+        c2D.SaveAs(f"/eos/user/m/moameen/www/TriggerStudyPlots/Eff2D_trigger_{lep}_eta_vs_pt{fs}")
         
-'''  
-    ########################################
-    # Print the numerical efficiency values
-    ########################################
-    print("Efficiency values (eta, pt, efficiency):")
-    for x_bin in range(1, eff2D.GetTotalHistogram().GetNbinsX() + 1):
-        for y_bin in range(1, eff2D.GetTotalHistogram().GetNbinsY() + 1):
-            if eff2D.GetTotalHistogram().GetBinContent(x_bin, y_bin) != 0:  # Check to avoid division by zero
-                eta = eff2D.GetTotalHistogram().GetXaxis().GetBinCenter(x_bin)
-                pt = eff2D.GetTotalHistogram().GetYaxis().GetBinCenter(y_bin)
-                efficiency = eff2D.GetEfficiency(eff2D.GetGlobalBin(x_bin, y_bin))
-                print(f"eta: {eta}, pt: {pt}, efficiency: {efficiency}")
-'''
+def main(args):
+
+    f = ROOT.TFile(args.rfile, "READ")
+    fdir = f.GetDirectory("twoleptonTriggers")
+    statOption = ROOT.TEfficiency.kFCP
+
+    drawEfficiency(fdir, 'lep1', args)
+    drawEfficiency(fdir, 'lep2', args)
 
 if __name__ == "__main__":
 
