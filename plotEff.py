@@ -121,15 +121,16 @@ def main(args):
     fdir = f.GetDirectory("twoleptonTriggers")
     statOption = ROOT.TEfficiency.kFCP
 
-    drawEfficiency(fdir, 'lep1', args)
-    drawEfficiency(fdir, 'lep2', args)
+    for leps in ['lep1', 'lep2']:
+        drawEfficiency(fdir, leps, args)
 
 if __name__ == "__main__":
 
     VERBOSE       = True
     YEAR          = "2022EE"
     TRGROOTFILE   = "histos_2lssTrigger_DATA2022EE.root"
-    FORMATS       = ['.png', '.pdf']
+    #FORMATS       = ['.png', '.pdf']
+    FORMATS       = ['.png']
 
     parser = ArgumentParser(description="Derive the trigger scale factors")
     parser.add_argument("-v", "--verbose", dest="verbose", default=VERBOSE, action="store_true", help="Verbose mode for debugging purposes [default: %s]" % (VERBOSE))
