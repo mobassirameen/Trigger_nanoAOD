@@ -2,7 +2,6 @@
 '''
 DESCRIPTION:
     Script to calculate and plot the trigger efficiencies for both data and MC stacks.
-
 '''
 #================
 # Import modules
@@ -10,7 +9,7 @@ DESCRIPTION:
 from argparse import ArgumentParser
 import ROOT
 import math 
-import time
+import os
 
 def getCanvas():
     d = ROOT.TCanvas("", "", 800, 700)
@@ -58,12 +57,6 @@ ROOT.gROOT.SetBatch(True)
 ROOT.gStyle.SetOptStat(0)
 ROOT.gStyle.SetTextFont(42)
 
-def SetStyle(h, COLOR):
-    h.SetMarkerStyle(20)
-    h.SetMarkerColor(COLOR)
-    h.SetLineColor(COLOR)
-    return h
-
 colors = {
     0: ROOT.kBlack,
     1: ROOT.kBlue,
@@ -74,15 +67,14 @@ colors = {
     6: ROOT.kTeal+3,
 }
 
-def main(args):
-
-    f_data = ROOT.TFile(args.rfile_data, "READ")
-    f_mc = ROOT.TFile(args.rfile_mc, "READ")
+def draw1DStackEfficiency(data_file, mc_file, era, formats):
+    f_data = ROOT.TFile(data_file, "READ")
+    f_mc = ROOT.TFile(mc_file, "READ")
     fdir_data = f_data.GetDirectory("twoleptonTriggers")
     fdir_mc = f_mc.GetDirectory("twoleptonTriggers")
     statOption = ROOT.TEfficiency.kFCP
 
-    variables = ["lep1_pt"]
+    variables = ["lep1_pt", "lep2_pt", "lep1_eta", "lep2_eta"]
     triggers = ["passedsignalANDreference"]
 
     for var in variables:
@@ -101,12 +93,12 @@ def main(args):
             nums_data[trg] = fdir_data.Get(f'h_{var}_{trg}')
             effs_data[trg] = ROOT.TEfficiency(nums_data[trg], den_data)
             effs_data[trg].SetStatisticOption(statOption)
-            effs_data[trg] = SetStyle(effs_data[trg], colors[j])
+            effs_data[trg] = SetStyle(effs_data[trg], colors[j], 20)
 
             nums_mc[trg] = fdir_mc.Get(f'h_{var}_{trg}')
             effs_mc[trg] = ROOT.TEfficiency(nums_mc[trg], den_mc)
             effs_mc[trg].SetStatisticOption(statOption)
-            effs_mc[trg] = SetStyle(effs_mc[trg], colors[j+1])
+            effs_mc[trg] = SetStyle(effs_mc[trg], colors[j+1], 21)
 
             if j == 0:
                 effs_data[trg].Draw()
@@ -115,8 +107,8 @@ def main(args):
                 effs_data[trg].Draw("same")
                 effs_mc[trg].Draw("same")
             
-            leg.AddEntry(effs_data[trg], f"Data {trg.replace('passedsignalANDreference', 'logical OR')}", "ep")
-            leg.AddEntry(effs_mc[trg], f"MC {trg.replace('passedsignalANDreference', 'logical OR')}", "ep")
+            leg.AddEntry(effs_data[trg], f"Data {trg.replace('passedsignalANDreference', '')}", "ep")
+            leg.AddEntry(effs_mc[trg], f"MC {trg.replace('passedsignalANDreference', '')}", "ep")
 
         c.Modified()
         c.Update()
@@ -124,7 +116,7 @@ def main(args):
         effs_data["passedsignalANDreference"].GetPaintedGraph().GetYaxis().SetTitle("#varepsilon_{L1+HLT}")
         leg.Draw("same")
 
-        # Styling stuff
+        # Styling
         tex_cms = AddCMSText()
         tex_cms.Draw("same")
 
@@ -133,29 +125,39 @@ def main(args):
 
         header = ROOT.TLatex()
         header.SetTextSize(0.04)
-        header.DrawLatexNDC(0.53, 0.905, "2022EE, #sqrt{s} = 13.6 TeV")
-        #header.DrawLatex(0.21, 0.85, "2022EE, #sqrt{s} = 13.6 TeV")
+        header.DrawLatexNDC(0.53, 0.905, f"{era}, #sqrt{{s}} = 13.6 TeV")
 
         c.Update()
         c.Modified()
-        for fs in args.formats:
-            savename = f'plots/TrgEffs_{var}_data_mc{fs}'
+        outdir = f"/eos/user/m/moameen/www/TriggerStudyPlots/{era}"
+        os.makedirs(outdir, exist_ok=True)
+        for fs in formats:
+            savename = f'{outdir}/TriggerEff1D_{var}{fs}'
             c.SaveAs(savename)
 
-if __name__ == "__main__":
+def main(args):
+    datasets = [
+        {"data_file": "histos_2lssTrigger_DATA2022EE.root", 
+         "mc_file": "histos_2lssTrigger_MC2022EE.root", 
+         "era": "2022EE",
+         },
+        {"data_file": "histos_2lssTrigger_DATA2022.root", 
+         "mc_file": "histos_2lssTrigger_MC2022.root", 
+         "era": "2022",
+         }
+    ]
+    
+    for dataset in datasets:
+        draw1DStackEfficiency(dataset["data_file"], dataset["mc_file"], dataset["era"], args.formats)
 
+if __name__ == "__main__":
     VERBOSE = True
-    YEAR = "2022EE"
-    TRGROOTFILE_DATA = "histos_2lssTrigger_DATA2022EE.root"
-    TRGROOTFILE_MC = "histos_2lssTrigger_MC2022EE.root"
     FORMATS = ['.png', '.pdf']
 
     parser = ArgumentParser(description="Derive the trigger scale factors for data and MC")
     parser.add_argument("-v", "--verbose", dest="verbose", default=VERBOSE, action="store_true", help="Verbose mode for debugging purposes [default: %s]" % (VERBOSE))
-    parser.add_argument("--rfile_data", dest="rfile_data", type=str, action="store", default=TRGROOTFILE_DATA, help="ROOT file containing the denominators and numerators for data [default: %s]" % (TRGROOTFILE_DATA))
-    parser.add_argument("--rfile_mc", dest="rfile_mc", type=str, action="store", default=TRGROOTFILE_MC, help="ROOT file containing the denominators and numerators for MC [default: %s]" % (TRGROOTFILE_MC))
-    parser.add_argument("--year", dest="year", action="store", default=YEAR, help="Process year")
     parser.add_argument("--formats", dest="formats", default=FORMATS, action="store", help="Formats to save histograms")
 
     args = parser.parse_args()
     main(args)
+
