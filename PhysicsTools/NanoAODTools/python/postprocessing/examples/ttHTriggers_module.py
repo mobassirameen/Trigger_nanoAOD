@@ -40,10 +40,18 @@ class TrigAnalysis(Module):
         self.h_lep1_eta_passedreftrig = ROOT.TH1F("h_lep1_eta_passedreftrig", "; #eta (\ell 1);", len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         self.h_lep1_eta_passedsignalANDreference = ROOT.TH1F("h_lep1_eta_passedsignalANDreference", "; #eta (\ell 1);", len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         
+        
+        self.h_lep1_eta_vs_pt_all = ROOT.TH2F('h_lep1_eta_vs_pt_all', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1);', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
+        self.h_lep1_eta_vs_pt_passed = ROOT.TH2F('h_lep1_eta_vs_pt_passed', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1);', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
+        self.h_lep1_eta_vs_pt_passedreftrig = ROOT.TH2F('h_lep1_eta_vs_pt_passedreftrig', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1);', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
+        self.h_lep1_eta_vs_pt_passedsignalANDreference = ROOT.TH2F('h_lep1_eta_vs_pt_passedsignalANDreference', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1);', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
+        
+        
         self.hList = {}
         for path in self.signal_paths:
             self.hList[f'h_lep1_pt_passtrig_HLT_{path}'] = ROOT.TH1F(f'h_lep1_pt_passtrig_HLT_{path}', ";p_{T}^{\ell 1} [GeV]", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
             self.hList[f'h_lep1_eta_passtrig_HLT_{path}'] = ROOT.TH1F(f'h_lep1_eta_passtrig_HLT_{path}', ";#eta (\ell 1)", len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
+            self.hList[f'h_lep1_eta_vs_pt_passtrig_HLT_{path}'] = ROOT.TH2F(f'h_lep1_eta_vs_pt_passtrig_HLT_{path}', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1)', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         self.addObject(self.h_passreftrig )
         self.addObject(self.h_lep1_pt_all)
         self.addObject(self.h_lep1_pt_passed)
@@ -53,6 +61,10 @@ class TrigAnalysis(Module):
         self.addObject(self.h_lep1_eta_passed)
         self.addObject(self.h_lep1_eta_passedreftrig)
         self.addObject(self.h_lep1_eta_passedsignalANDreference)
+        self.addObject(self.h_lep1_eta_vs_pt_all)
+        self.addObject(self.h_lep1_eta_vs_pt_passed)
+        self.addObject(self.h_lep1_eta_vs_pt_passedreftrig)
+        self.addObject(self.h_lep1_eta_vs_pt_passedsignalANDreference)
         for h in self.hList:
             self.addObject(self.hList[h])
 
@@ -110,6 +122,7 @@ class TrigAnalysis(Module):
         
         self.h_lep1_pt_all.Fill(conept_TTH(l1))
         self.h_lep1_eta_all.Fill(l1.eta)
+        self.h_lep1_eta_vs_pt_all.Fill(conept_TTH(l1), l1.eta)
         
         # Check if event passes the signal trigger(s)
         signalOR = False
@@ -118,17 +131,21 @@ class TrigAnalysis(Module):
                 signalOR = True
                 self.hList[f'h_lep1_pt_passtrig_HLT_{path}'].Fill(conept_TTH(l1))
                 self.hList[f'h_lep1_eta_passtrig_HLT_{path}'].Fill(l1.eta)
+                self.hList[f'h_lep1_eta_vs_pt_passtrig_HLT_{path}'].Fill(conept_TTH(l1), l1.eta)
 
         if signalOR:
             self.h_lep1_pt_passed.Fill(conept_TTH(l1))
             self.h_lep1_eta_passed.Fill(l1.eta)
+            self.h_lep1_eta_vs_pt_passed.Fill(conept_TTH(l1), l1.eta)
             
         if refAccept:
             self.h_lep1_pt_passedreftrig.Fill(conept_TTH(l1))
             self.h_lep1_eta_passedreftrig.Fill(l1.eta)
+            self.h_lep1_eta_vs_pt_passedreftrig.Fill(conept_TTH(l1), l1.eta)
             
         if signalOR and hlt.PFMET120_PFMHT120_IDTight == 1: ## check if OR of signal_path(Trigger_2lss) and ref_path (Trigger_MET) are activated
             self.h_lep1_pt_passedsignalANDreference.Fill(conept_TTH(l1))
-            self.h_lep1_eta_passedsignalANDreference.Fill(l1.eta)    
+            self.h_lep1_eta_passedsignalANDreference.Fill(l1.eta)
+            self.h_lep1_eta_vs_pt_passedsignalANDreference.Fill(conept_TTH(l1), l1.eta)    
             
         return True
