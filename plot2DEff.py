@@ -72,7 +72,7 @@ colors = {0: ROOT.kBlack,
           6: ROOT.kTeal+3,
           }
 
-def drawEfficiency(fdir, lep, era, datatype, args):
+def draw2DEfficiency(fdir, lep, era, datatype, args):
     # Plot 2D:
     c2D = getCanvas()
 
@@ -131,7 +131,7 @@ def main(args):
         statOption = ROOT.TEfficiency.kFCP
 
         for leps in ['lep1', 'lep2']:
-            drawEfficiency(fdir, leps, era, datatype, args)
+            draw2DEfficiency(fdir, leps, era, datatype, args)
 
 if __name__ == "__main__":
 
@@ -145,4 +145,3 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
     main(args)
-
