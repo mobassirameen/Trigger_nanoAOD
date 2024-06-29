@@ -25,26 +25,44 @@ class TrigAnalysis(Module):
         self.bins = {}
         self.bins["lep1_pt"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
         self.bins["lep1_eta"] = [-2.4, -2.2, -2.0, -1.8, -1.6, -1.4, -1.2, -1.0, -0.8, -0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4]
-        #self.bins["lep2_pt"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+        self.bins["lep2_pt"] = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+        self.bins["lep2_eta"] = [-2.4, -2.2, -2.0, -1.8, -1.6, -1.4, -1.2, -1.0, -0.8, -0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0, 2.2, 2.4]
         
         self.h_passreftrig  = ROOT.TH1F("h_passreftrig" , "; passed ref trigger", 2, 0. , 2.)
         
-        # pT of leading leptons
+        # pT of leading leptons (lep1)
         self.h_lep1_pt_all = ROOT.TH1F("h_lep1_pt_all", "; Cone p_{T}^{\ell 1} [GeV]", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
         self.h_lep1_pt_passed = ROOT.TH1F("h_lep1_pt_passed", "; Cone p_{T}^{\ell 1} [GeV];", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
         self.h_lep1_pt_passedreftrig = ROOT.TH1F("h_lep1_pt_passedreftrig", "; Cone p_{T}^{\ell 1} [GeV];", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
         self.h_lep1_pt_passedsignalANDreference = ROOT.TH1F("h_lep1_pt_passedsignalANDreference", "; Cone p_{T}^{\ell 1} [GeV];", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
-        # eta of leading leptons
+        # eta of leading leptons (lep1)
         self.h_lep1_eta_all = ROOT.TH1F("h_lep1_eta_all", "; #eta (\ell 1)", len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         self.h_lep1_eta_passed = ROOT.TH1F("h_lep1_eta_passed", "; #eta (\ell 1);", len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         self.h_lep1_eta_passedreftrig = ROOT.TH1F("h_lep1_eta_passedreftrig", "; #eta (\ell 1);", len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         self.h_lep1_eta_passedsignalANDreference = ROOT.TH1F("h_lep1_eta_passedsignalANDreference", "; #eta (\ell 1);", len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         
-        
+        # 2D hist of lep1 eta vs pt
         self.h_lep1_eta_vs_pt_all = ROOT.TH2F('h_lep1_eta_vs_pt_all', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1);', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         self.h_lep1_eta_vs_pt_passed = ROOT.TH2F('h_lep1_eta_vs_pt_passed', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1);', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         self.h_lep1_eta_vs_pt_passedreftrig = ROOT.TH2F('h_lep1_eta_vs_pt_passedreftrig', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1);', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
         self.h_lep1_eta_vs_pt_passedsignalANDreference = ROOT.TH2F('h_lep1_eta_vs_pt_passedsignalANDreference', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1);', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
+        
+        # pT of sub-leading leptons (lep2)
+        self.h_lep2_pt_all = ROOT.TH1F("h_lep2_pt_all", "; Cone p_{T}^{\ell 2} [GeV]", len(self.bins["lep2_pt"])-1, array.array("d", self.bins["lep2_pt"]))
+        self.h_lep2_pt_passed = ROOT.TH1F("h_lep2_pt_passed", "; Cone p_{T}^{\ell 2} [GeV];", len(self.bins["lep2_pt"])-1, array.array("d", self.bins["lep2_pt"]))
+        self.h_lep2_pt_passedreftrig = ROOT.TH1F("h_lep2_pt_passedreftrig", "; Cone p_{T}^{\ell 2} [GeV];", len(self.bins["lep2_pt"])-1, array.array("d", self.bins["lep2_pt"]))
+        self.h_lep2_pt_passedsignalANDreference = ROOT.TH1F("h_lep2_pt_passedsignalANDreference", "; Cone p_{T}^{\ell 2} [GeV];", len(self.bins["lep2_pt"])-1, array.array("d", self.bins["lep2_pt"]))
+        # eta of sub-leading leptons (lep2)
+        self.h_lep2_eta_all = ROOT.TH1F("h_lep2_eta_all", "; #eta (\ell 2)", len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
+        self.h_lep2_eta_passed = ROOT.TH1F("h_lep2_eta_passed", "; #eta (\ell 2);", len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
+        self.h_lep2_eta_passedreftrig = ROOT.TH1F("h_lep2_eta_passedreftrig", "; #eta (\ell 2);", len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
+        self.h_lep2_eta_passedsignalANDreference = ROOT.TH1F("h_lep2_eta_passedsignalANDreference", "; #eta (\ell 2);", len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
+        
+        # 2D hist of lep2 eta vs pt
+        self.h_lep2_eta_vs_pt_all = ROOT.TH2F('h_lep2_eta_vs_pt_all', ';Cone p_{T}^{\ell 2} [GeV];#eta (\ell 2);', len(self.bins["lep2_pt"])-1,  array.array("d", self.bins["lep2_pt"]), len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
+        self.h_lep2_eta_vs_pt_passed = ROOT.TH2F('h_lep2_eta_vs_pt_passed', ';Cone p_{T}^{\ell 2} [GeV];#eta (\ell 2);', len(self.bins["lep2_pt"])-1,  array.array("d", self.bins["lep2_pt"]), len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
+        self.h_lep2_eta_vs_pt_passedreftrig = ROOT.TH2F('h_lep2_eta_vs_pt_passedreftrig', ';Cone p_{T}^{\ell 2} [GeV];#eta (\ell 2);', len(self.bins["lep2_pt"])-1,  array.array("d", self.bins["lep2_pt"]), len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
+        self.h_lep2_eta_vs_pt_passedsignalANDreference = ROOT.TH2F('h_lep2_eta_vs_pt_passedsignalANDreference', ';Cone p_{T}^{\ell 2} [GeV];#eta (\ell 2);', len(self.bins["lep2_pt"])-1,  array.array("d", self.bins["lep2_pt"]), len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
         
         
         self.hList = {}
@@ -52,6 +70,10 @@ class TrigAnalysis(Module):
             self.hList[f'h_lep1_pt_passtrig_HLT_{path}'] = ROOT.TH1F(f'h_lep1_pt_passtrig_HLT_{path}', ";p_{T}^{\ell 1} [GeV]", len(self.bins["lep1_pt"])-1, array.array("d", self.bins["lep1_pt"]))
             self.hList[f'h_lep1_eta_passtrig_HLT_{path}'] = ROOT.TH1F(f'h_lep1_eta_passtrig_HLT_{path}', ";#eta (\ell 1)", len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
             self.hList[f'h_lep1_eta_vs_pt_passtrig_HLT_{path}'] = ROOT.TH2F(f'h_lep1_eta_vs_pt_passtrig_HLT_{path}', ';Cone p_{T}^{\ell 1} [GeV];#eta (\ell 1)', len(self.bins["lep1_pt"])-1,  array.array("d", self.bins["lep1_pt"]), len(self.bins["lep1_eta"])-1, array.array("d", self.bins["lep1_eta"]))
+            
+            self.hList[f'h_lep2_pt_passtrig_HLT_{path}'] = ROOT.TH1F(f'h_lep2_pt_passtrig_HLT_{path}', ";p_{T}^{\ell 2} [GeV]", len(self.bins["lep2_pt"])-1, array.array("d", self.bins["lep2_pt"]))
+            self.hList[f'h_lep2_eta_passtrig_HLT_{path}'] = ROOT.TH1F(f'h_lep2_eta_passtrig_HLT_{path}', ";#eta (\ell 2)", len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
+            self.hList[f'h_lep2_eta_vs_pt_passtrig_HLT_{path}'] = ROOT.TH2F(f'h_lep2_eta_vs_pt_passtrig_HLT_{path}', ';Cone p_{T}^{\ell 2} [GeV];#eta (\ell 2)', len(self.bins["lep2_pt"])-1,  array.array("d", self.bins["lep2_pt"]), len(self.bins["lep2_eta"])-1, array.array("d", self.bins["lep2_eta"]))
         self.addObject(self.h_passreftrig )
         self.addObject(self.h_lep1_pt_all)
         self.addObject(self.h_lep1_pt_passed)
@@ -65,6 +87,19 @@ class TrigAnalysis(Module):
         self.addObject(self.h_lep1_eta_vs_pt_passed)
         self.addObject(self.h_lep1_eta_vs_pt_passedreftrig)
         self.addObject(self.h_lep1_eta_vs_pt_passedsignalANDreference)
+        
+        self.addObject(self.h_lep2_pt_all)
+        self.addObject(self.h_lep2_pt_passed)
+        self.addObject(self.h_lep2_pt_passedreftrig)
+        self.addObject(self.h_lep2_pt_passedsignalANDreference)
+        self.addObject(self.h_lep2_eta_all)
+        self.addObject(self.h_lep2_eta_passed)
+        self.addObject(self.h_lep2_eta_passedreftrig)
+        self.addObject(self.h_lep2_eta_passedsignalANDreference)
+        self.addObject(self.h_lep2_eta_vs_pt_all)
+        self.addObject(self.h_lep2_eta_vs_pt_passed)
+        self.addObject(self.h_lep2_eta_vs_pt_passedreftrig)
+        self.addObject(self.h_lep2_eta_vs_pt_passedsignalANDreference)
         for h in self.hList:
             self.addObject(self.hList[h])
 
@@ -124,6 +159,10 @@ class TrigAnalysis(Module):
         self.h_lep1_eta_all.Fill(l1.eta)
         self.h_lep1_eta_vs_pt_all.Fill(conept_TTH(l1), l1.eta)
         
+        self.h_lep2_pt_all.Fill(conept_TTH(l2))
+        self.h_lep2_eta_all.Fill(l2.eta)
+        self.h_lep2_eta_vs_pt_all.Fill(conept_TTH(l2), l2.eta)
+        
         # Check if event passes the signal trigger(s)
         signalOR = False
         for path in self.signal_paths:
@@ -132,20 +171,36 @@ class TrigAnalysis(Module):
                 self.hList[f'h_lep1_pt_passtrig_HLT_{path}'].Fill(conept_TTH(l1))
                 self.hList[f'h_lep1_eta_passtrig_HLT_{path}'].Fill(l1.eta)
                 self.hList[f'h_lep1_eta_vs_pt_passtrig_HLT_{path}'].Fill(conept_TTH(l1), l1.eta)
+                
+                self.hList[f'h_lep2_pt_passtrig_HLT_{path}'].Fill(conept_TTH(l2))
+                self.hList[f'h_lep2_eta_passtrig_HLT_{path}'].Fill(l2.eta)
+                self.hList[f'h_lep2_eta_vs_pt_passtrig_HLT_{path}'].Fill(conept_TTH(l2), l2.eta)
 
         if signalOR:
             self.h_lep1_pt_passed.Fill(conept_TTH(l1))
             self.h_lep1_eta_passed.Fill(l1.eta)
             self.h_lep1_eta_vs_pt_passed.Fill(conept_TTH(l1), l1.eta)
             
+            self.h_lep2_pt_passed.Fill(conept_TTH(l2))
+            self.h_lep2_eta_passed.Fill(l2.eta)
+            self.h_lep2_eta_vs_pt_passed.Fill(conept_TTH(l2), l2.eta)
+            
         if refAccept:
             self.h_lep1_pt_passedreftrig.Fill(conept_TTH(l1))
             self.h_lep1_eta_passedreftrig.Fill(l1.eta)
             self.h_lep1_eta_vs_pt_passedreftrig.Fill(conept_TTH(l1), l1.eta)
             
+            self.h_lep2_pt_passedreftrig.Fill(conept_TTH(l2))
+            self.h_lep2_eta_passedreftrig.Fill(l2.eta)
+            self.h_lep2_eta_vs_pt_passedreftrig.Fill(conept_TTH(l2), l2.eta)
+            
         if signalOR and hlt.PFMET120_PFMHT120_IDTight == 1: ## check if OR of signal_path(Trigger_2lss) and ref_path (Trigger_MET) are activated
             self.h_lep1_pt_passedsignalANDreference.Fill(conept_TTH(l1))
             self.h_lep1_eta_passedsignalANDreference.Fill(l1.eta)
-            self.h_lep1_eta_vs_pt_passedsignalANDreference.Fill(conept_TTH(l1), l1.eta)    
+            self.h_lep1_eta_vs_pt_passedsignalANDreference.Fill(conept_TTH(l1), l1.eta)  
+            
+            self.h_lep2_pt_passedsignalANDreference.Fill(conept_TTH(l2))
+            self.h_lep2_eta_passedsignalANDreference.Fill(l2.eta)
+            self.h_lep2_eta_vs_pt_passedsignalANDreference.Fill(conept_TTH(l2), l2.eta)  
             
         return True
