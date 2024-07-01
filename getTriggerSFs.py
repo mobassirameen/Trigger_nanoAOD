@@ -2,7 +2,7 @@ import ROOT
 
 class getTriggerSFs:
     def __init__(self):
-        # Load the TH1s
+        # Load the eff of TH1s
         self.f_data = ROOT.TFile('/eos/user/m/moameen/Trigger_nanoAOD/efficiencies_2022_data.root', 'r')
         print("Reading the Data file", self.f_data)
 
@@ -20,6 +20,7 @@ class getTriggerSFs:
         print("MC histogram loaded:", self.lep2pTmc)
     
     def ptCheck(self, pt):
+        # Ensure the pt is within the bin range
         if pt > 100:
             pt = 100
         elif pt < 10:
@@ -42,19 +43,32 @@ class getTriggerSFs:
     def getEfficiencyMC(self, pt):
         return self.getEfficiency(self.lep2pTmc, pt)
     
-    # This is the SF for for 2lss_Trigger
-    def getScaleFactor(self, pt):
-        effData = self.getEfficiencyData(pt)
-        effMC = self.getEfficiencyMC(pt)
-        sf = effData / effMC if effMC != 0 else 0
-        return sf
+    # This is the SF for for 2lss_Trigger for each bin
+    def getScaleFactors(self, bin_edges):
+        scale_factors = []
+        for i in range(len(bin_edges) - 1):
+            bin_start = bin_edges[i]
+            #print(bin_start)
+            bin_end = bin_edges[i + 1]
+            #print(bin_end)
+            avg_pt = (bin_start + bin_end) / 2.0
+            #print(avg_pt)
+            effData = self.getEfficiencyData(avg_pt)
+            print(" - DATA Efficiency = %f" % effData)
+            effMC = self.getEfficiencyMC(avg_pt)
+            print(" - MC Efficiency = %f" % effMC)
+            sf = effData / effMC if effMC != 0 else 0
+            scale_factors.append(sf)
+            print(f"Bin [{bin_start}, {bin_end}]: Scale Factor: {sf}")
+        return scale_factors
 
 if __name__ == "__main__":
     # Initialize the class
     trigger_effs = getTriggerSFs()
     
-    # Example pt value to calculate the scale factor
-    pt_value = 55  # Replace this with the actual pt value you want to check
-    scale_factor = trigger_effs.getScaleFactor(pt_value)
-    print("Scale Factor:", scale_factor)
+    # Define the bin edges
+    bin_edges = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+    
+    # Calculate scale factors for each bin
+    scale_factors = trigger_effs.getScaleFactors(bin_edges)
 
