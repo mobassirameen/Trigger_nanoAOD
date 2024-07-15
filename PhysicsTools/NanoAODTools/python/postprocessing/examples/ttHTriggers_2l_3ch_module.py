@@ -139,7 +139,7 @@ class TrigAnalysis(Module):
                 return False
                 
             id1,id2 = abs(leps[0].pdgId), abs(leps[1].pdgId)
-            if (id1 == 11 and id2 == 13) or (id1 == 13 and id2 == 11):
+            if ((id1 == 11 and id2 == 13) or (id1 == 13 and id2 == 11)):
                 return False    
         
             l1, l2 = leps[0], leps[1]
@@ -185,7 +185,7 @@ class TrigAnalysis(Module):
                 return False
                 
             id1,id2 = abs(leps[0].pdgId), abs(leps[1].pdgId)
-            if id1 == id2 and id1 == 13:
+            if ((id1 == id2) and (id1 == 13)):
                 return False    
         
             l1, l2 = leps[0], leps[1]
